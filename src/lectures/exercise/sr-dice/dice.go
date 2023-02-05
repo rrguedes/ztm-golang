@@ -23,7 +23,13 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 func main() {
+	rand.Seed(85)
+	roll := rand.Intn(6) + 1
+	fmt.Println("Roll: ", roll)
 }

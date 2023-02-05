@@ -31,4 +31,32 @@ const (
 
 func main() {
 	servers := []string{"darkstar", "aiur", "omicron", "w359", "baseline"}
+
+	serverMap := setAllStatuses(servers, Online)
+	fmt.Println("--- Changing status ---")
+	showStatus(serverMap)
+
+	serverMap["darkstar"] = Retired
+	serverMap["aiur"] = Offline
+	fmt.Println("--- Changing status ---")
+	showStatus(serverMap)
+
+	serverMap = setAllStatuses(servers, Maintenance)
+	fmt.Println("--- Changing status ---")
+	showStatus(serverMap)
+}
+
+func setAllStatuses(servers []string, status int) map[string]int {
+	serverMap := make(map[string]int)
+	for i := 0; i < len(servers); i++ {
+		current := servers[i]
+		serverMap[current] = status
+	}
+	return serverMap
+}
+
+func showStatus(serversMap map[string]int) {
+	for server, status := range serversMap {
+		fmt.Println("Server:", server, "-- Status:", status)
+	}
 }

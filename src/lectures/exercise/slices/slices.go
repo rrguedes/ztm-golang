@@ -19,4 +19,23 @@ import "fmt"
 type Part string
 
 func main() {
+
+	assemblyLine := []Part{"Part1", "Part2", "Part3"}
+	fmt.Println("--- Step 1 ---")
+	showLine(assemblyLine)
+
+	assemblyLine = append(assemblyLine, "Part4", "Part5")
+	fmt.Println("--- Step 2 ---")
+	showLine(assemblyLine)
+
+	assemblyLine = assemblyLine[3:]
+	fmt.Println("--- Step 3 ---")
+	showLine(assemblyLine)
+}
+
+func showLine(assemblyLine []Part) {
+	for i := 0; i < len(assemblyLine); i++ {
+		current := assemblyLine[i]
+		fmt.Println(current)
+	}
 }
