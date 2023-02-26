@@ -18,7 +18,70 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"unicode"
+)
+
+func NumberOfDigits(data []string) int {
+	total := 0
+	for i := 0; i < len(data); i++ {
+		lineData := data[i]
+		runes := []rune(lineData)
+		for j := 0; j < len(runes); j++ {
+			if unicode.IsDigit(runes[j]) {
+				total += 1
+			}
+		}
+	}
+	return total
+}
+
+func NumberOfLetters(data []string) int {
+	total := 0
+	for i := 0; i < len(data); i++ {
+		lineData := data[i]
+		runes := []rune(lineData)
+		for j := 0; j < len(runes); j++ {
+			if unicode.IsLetter(runes[j]) {
+				total += 1
+			}
+		}
+	}
+	return total
+}
+
+func NumberOfSpaces(data []string) int {
+	total := 0
+	for i := 0; i < len(data); i++ {
+		lineData := data[i]
+		runes := []rune(lineData)
+		for j := 0; j < len(runes); j++ {
+			if unicode.IsSpace(runes[j]) {
+				total += 1
+			}
+		}
+	}
+	return total
+}
+
+func NumberOfPonctuationMarks(data []string) int {
+	total := 0
+	for i := 0; i < len(data); i++ {
+		lineData := data[i]
+		runes := []rune(lineData)
+		for j := 0; j < len(runes); j++ {
+			if unicode.IsPunct(runes[j]) {
+				total += 1
+			}
+		}
+	}
+	return total
+}
+
+func report(data []string, operation func(data []string) int, opName string) {
+	fmt.Printf("There are %v %v at the provided string sequence \n", operation(data), opName)
+}
 
 func main() {
 	lines := []string{
@@ -28,4 +91,8 @@ func main() {
 		"12 spaces,",
 		"and 4 punctuation marks in these lines of text!",
 	}
+	report(lines, NumberOfDigits, "digits")
+	report(lines, NumberOfLetters, "letters")
+	report(lines, NumberOfSpaces, "spaces")
+	report(lines, NumberOfPonctuationMarks, "ponctuation marks")
 }
