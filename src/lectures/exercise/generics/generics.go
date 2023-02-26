@@ -15,7 +15,9 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Distance int32
 type Velocity float64
@@ -31,6 +33,20 @@ type Velocity float64
 /*
 func clamp(value, min, max) clamped_value {}
 */
+
+type Number interface {
+	float32 | float64 | int8 | uint32 | Distance | Velocity
+}
+
+func clamp[T Number](value, min, max T) T {
+	if value > max {
+		return max
+	}
+	if value < min {
+		return min
+	}
+	return value
+}
 
 func testClampInt8() {
 	var (

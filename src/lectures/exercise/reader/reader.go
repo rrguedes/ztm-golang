@@ -18,8 +18,50 @@
 
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+)
+
+var commandsRan = 0
+var nonBlankLines = 0
 
 func main() {
+	fmt.Println("Bem vindo champs!")
+	reader := bufio.NewScanner(os.Stdin)
+	for reader.Scan() {
+		input := reader.Text()
+		trimmedCommand := strings.TrimSpace(input)
+		AckCommand(trimmedCommand)
+	}
+}
 
+func PlusOne() {
+	commandsRan += 1
+}
+
+func ShowStats() {
+	fmt.Println("--- Total commands ran: ---", commandsRan)
+	fmt.Println("--- Total non-blank lines: ---", nonBlankLines)
+}
+
+func AckCommand(cmd string) {
+	responses := map[string]string{
+		"hello": "Hello Stranger!",
+		"bye":   "Bye bye!",
+	}
+	switch cmd {
+	case "hello":
+		fmt.Println(responses["hello"])
+		PlusOne()
+	case "bye":
+		fmt.Println(responses["bye"])
+		PlusOne()
+	case "q", "Q":
+		ShowStats()
+	default:
+		nonBlankLines += 1
+	}
 }

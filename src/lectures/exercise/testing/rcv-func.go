@@ -12,7 +12,7 @@
 //  - Print out the statistic change within each function
 //  - Execute each function at least once
 
-package main
+package testing
 
 import "fmt"
 
@@ -32,7 +32,6 @@ func (player *Player) setEnergy(energy int) {
 func main() {
 	player := Player{maxHealth: 100, maxEnergy: 100, name: "CJ"}
 	fmt.Println("Player before functions", player)
-
 	player.setEnergy(50)
 	player.setHealth(70)
 	fmt.Println("Player after functions", player)
