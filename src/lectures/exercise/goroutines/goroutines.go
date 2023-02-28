@@ -28,12 +28,41 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
+var totalGeral int = 0
+
 func main() {
 	files := []string{"num1.txt", "num2.txt", "num3.txt", "num4.txt", "num5.txt"}
+	totalByFile := func(fileName string) {
+		file, err := os.Open(fileName)
+		fmt.Printf("Arquivo %v \n", fileName)
+		if err != nil {
+			fmt.Printf("Não foi possível abrir o arquivo")
+		}
+		fileLines := bufio.NewScanner(file)
+		total := 0
+		defer file.Close()
+		for fileLines.Scan() {
+			// fmt.Println(fileLines.Text())
+			number, err := strconv.Atoi(strings.TrimSpace(fileLines.Text()))
+			if err == nil {
+				total += number
+			}
+		}
+		fmt.Printf("Total do arquivo: %v \n", total)
+		totalGeral += total
+		time.Sleep(100 * time.Millisecond)
+	}
+	// Chamar arquivos
+	for i := 0; i < len(files); i++ {
+		fileName := files[i]
+		go totalByFile(fileName)
+	}
+	time.Sleep(100 * time.Millisecond)
+	fmt.Println("--- Total Geral: ", totalGeral)
 }
