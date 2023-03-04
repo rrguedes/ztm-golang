@@ -14,17 +14,45 @@
 
 package main
 
-import "fmt"
-import "time"
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+type ControlMsg int
+
+const (
+	DoExit = iota
+	ExitOk
+)
 
 type Job int
 
-func longCalculation(i Job) int {
-	duration := time.Duration(rand.Intn(1000)) * time.Millisecond
-	time.Sleep(duration)
-	fmt.Printf("Job %d complete in %v\n", i, duration)
-	return int(i) * 30
+type Result struct {
+	data int
+	job  Job
+}
+
+func longCalculation(job <-chan Job, result chan<- Result, control chan ControlMsg) {
+	for {
+		select {
+		case msg := <-control:
+			switch msg {
+			case DoExit:
+				fmt.Println("The goroutine has received a Exit message. Leaving!")
+				control <- ExitOk
+				return
+			default:
+				panic("Unhandled message")
+			}
+		case job := <-job:
+			duration := time.Duration(rand.Intn(1000)) * time.Millisecond
+			time.Sleep(duration)
+			fmt.Printf("Job %d complete in %v\n", job, duration)
+			result <- Result{data: int(job) * 30, job: job}
+		}
+	}
 }
 
 func makeJobs() []Job {
@@ -37,5 +65,28 @@ func makeJobs() []Job {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
+	jobChannel := make(chan Job, 100)
+	resultChannel := make(chan Result, 100)
+	controlChannel := make(chan ControlMsg, 100)
+
 	jobs := makeJobs()
+
+	go longCalculation(jobChannel, resultChannel, controlChannel)
+
+	for i := 0; i < len(jobs); i++ {
+		jobChannel <- jobs[i]
+	}
+
+	for {
+		select {
+		case result := <-resultChannel:
+			fmt.Printf("Resultado: entrada %v, retorno %v \n", result.job, result.data)
+		case <-time.After(10000 * time.Millisecond):
+			fmt.Println("Time out")
+			controlChannel <- DoExit
+			<-controlChannel
+			fmt.Println("Exited Program")
+			return
+		}
+	}
 }
