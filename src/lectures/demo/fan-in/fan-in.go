@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/chai2010/webp"
 	"github.com/google/uuid"
@@ -74,11 +75,51 @@ func saveToDisk(imgBuf bytes.Buffer) string {
 	return filename
 }
 
+func fanIn[T any](channels ...<-chan T) <-chan T {
+	// Recebendo todos os channels e combinando os dados em um único channel que então será retornado para a próxima etapa do pipeline
+	var wg sync.WaitGroup
+	// Channel consolidador
+	out := make(chan T)
+	// Preciso saber quantos channels aguardar
+	wg.Add(len(channels))
+	// Para cada channel de entrada, consolido as informações dos channels anteriores
+	for _, ch := range channels {
+		go func(in <-chan T) {
+			for i := range in {
+				out <- i
+			}
+			// Quando eu incluo os dados do meu channel no channel consolidador, eu informo que terminei minha execução
+			wg.Done()
+		}(ch)
+	}
+
+	go func() {
+		wg.Wait() // --> espera até que todas as goroutines concluam a execucao
+		close(out)
+	}() // --> Com esse comando eu crio e executo uma goroutine
+	return out
+}
+
 func main() {
 	base64Images := makeWork(img1, img2, img3)
-	rawImages := pipeline(base64Images, base64ToRawImage)
-	webpImages := pipeline(rawImages, encodeToWebp)
-	filenames := pipeline(webpImages, saveToDisk)
+	// Stage 1
+	rawImages1 := pipeline(base64Images, base64ToRawImage)
+	rawImages2 := pipeline(base64Images, base64ToRawImage)
+	rawImages3 := pipeline(base64Images, base64ToRawImage)
+	rawImages := fanIn(rawImages1, rawImages2, rawImages3)
+
+	// Stage 2
+	webpImages1 := pipeline(rawImages, encodeToWebp)
+	webpImages2 := pipeline(rawImages, encodeToWebp)
+	webpImages3 := pipeline(rawImages, encodeToWebp)
+	webpImages := fanIn(webpImages1, webpImages2, webpImages3)
+
+	// Stage 3
+	filenames1 := pipeline(webpImages, saveToDisk)
+	filenames2 := pipeline(webpImages, saveToDisk)
+	filenames3 := pipeline(webpImages, saveToDisk)
+	filenames := fanIn(filenames1, filenames2, filenames3)
+
 	for name := range filenames {
 		fmt.Println(name)
 	}
