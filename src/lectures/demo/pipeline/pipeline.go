@@ -1,6 +1,78 @@
 package main
 
+import (
+	"bytes"
+	"encoding/base64"
+	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	"log"
+	"os"
+	"strings"
+
+	"github.com/chai2010/webp"
+	"github.com/google/uuid"
+)
+
+func base64ToRawImage(imageString string) image.Image {
+	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imageString))
+	img, _, err := image.Decode(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return img
+}
+
+func encodeToWebp(img image.Image) bytes.Buffer {
+	var buf bytes.Buffer
+	if err := webp.Encode(&buf, img, &webp.Options{Lossless: true}); err != nil {
+		log.Fatal(err)
+	}
+	return buf
+}
+
+func saveToDisk(imgBuf bytes.Buffer) string {
+	fileName := fmt.Sprintf("%v.webp", uuid.New().String())
+	os.WriteFile(fileName, imgBuf.Bytes(), 0644)
+	return fileName
+}
+
+func makeWork(base64Images ...string) <-chan string {
+	out := make(chan string)
+	go func() {
+		for _, encodedImg := range base64Images {
+			out <- encodedImg
+		}
+		close(out)
+	}()
+	return out
+}
+
+func pipeline[I any, O any](input <-chan I, process func(I) O) <-chan O {
+	out := make(chan O)
+	go func() {
+		for in := range input {
+			out <- process(in)
+		}
+		close(out)
+	}()
+	return out
+}
+
 func main() {
+	// load data into pipeline
+	base64Images := makeWork(img1, img2, img3)
+	// decode base64 into imaeg format
+	rawImages := pipeline(base64Images, base64ToRawImage)
+	// encode webp
+	webpImages := pipeline(rawImages, encodeToWebp)
+	// save images to disk
+	fileNames := pipeline(webpImages, saveToDisk)
+	for name := range fileNames {
+		fmt.Println(name)
+	}
 }
 
 const img1 = `
