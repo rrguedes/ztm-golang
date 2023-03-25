@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sync"
 	"time"
 
 	_ "image/gif"
@@ -115,16 +116,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	// try to create a new database
-	keikodb.MakeNew(db)
+	//keikodb.MakeNew(db)
+	var wg sync.WaitGroup
+	wg.Add(1)
 
-	// serve on `/`
-	http.Handle("/", handleRoot(db))
+	go func() {
+		// serve on `/`
+		http.Handle("/", handleRoot(db))
 
-	log.Println("Listening on localhost:8099")
-	err = http.ListenAndServe("localhost:8099", nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
+		log.Println("Listening on localhost:8099")
+		err = http.ListenAndServe("localhost:8099", nil)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	wg.Wait()
 }
